@@ -11,17 +11,9 @@ import Combine
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    var cancel: AnyCancellable?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        let newsFeed = NewsFeedServiceFactory.makeService()
-        cancel = newsFeed.fetchBreakingNews().sink(receiveCompletion: { completion in
-            print(completion)
-        }) { newsFeed in
-            print(newsFeed)
-        }
         return true
     }
 
