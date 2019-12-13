@@ -9,26 +9,21 @@
 import Foundation
 import Combine
 
-struct NewsFeedItem
+class NewsFeedViewModel: ObservableObject
 {
-    let title: String
-    let subTitle: String
-    let imageUrl: URL?
-}
-
-class NewsFeedViewModel
-{
-    @Published var items: [NewsFeedItem] = []
-    
+    @Published private(set) var articles: [NewsArticleViewModel] = []
     private let newsFeedService = NewsFeedServiceFactory.makeService()
     
     func refresh() -> AnyCancellable
     {
-        return newsFeedService.fetchBreakingNews().sink(receiveCompletion: { completion in
-            print(completion)
+        self.articles.removeAll()
+        return newsFeedService.fetchBreakingNews(forCountry: .uk).sink(receiveCompletion: { completion in
+           //TODO: need to figure out how to handle completion enum
         }) { newsFeed in
-            self.items = newsFeed.articles.map {
-                NewsFeedItem(title: $0.title, subTitle: $0.content, imageUrl: URL(string: $0.urlToImage ?? ""))
+            newsFeed.articles.forEach { article in
+                self.articles.append(NewsArticleViewModel(title: article.title,
+                                                          subtitle: article.content,
+                                                          imageUrl: URL(string: article.urlToImage ?? "")))
             }
         }
     }

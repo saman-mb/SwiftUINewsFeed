@@ -11,7 +11,7 @@ import Combine
 
 protocol NewsFeedService
 {
-    func fetchBreakingNews() -> AnyPublisher<NewsFeedResponse, Error>
+    func fetchBreakingNews(forCountry country: Country) -> AnyPublisher<NewsFeedResponse, Error>
 }
 
 class NewsFeedServiceFactory
@@ -21,22 +21,27 @@ class NewsFeedServiceFactory
         return NewsApiOrgService()
     }
 }
+    
+enum NewsFeedServiceError: Error
+{
+    case invalidUrl
+}
+    
+enum Country: String
+{
+    case uk, us
+}
 
 private class NewsApiOrgService: NewsFeedService
 {
     private let apiKey = "b572d827f9df493ebc57dfdff47f8ff7"
-
-    func fetchBreakingNewsTest()
-    {
-        let url = URL(string: "https://newsapi.org/v2/top-headlines?country=us&apiKey=\(apiKey)")!
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            print("Hi")
-        }
-    }
     
-    func fetchBreakingNews() -> AnyPublisher<NewsFeedResponse, Error>
+    func fetchBreakingNews(forCountry country: Country) -> AnyPublisher<NewsFeedResponse, Error>
     {
-        let url = URL(string: "https://newsapi.org/v2/top-headlines?country=us&apiKey=\(apiKey)")!
+        guard let url = URL(string: "https://newsapi.org/v2/top-headlines?country=\(country.rawValue)&apiKey=\(apiKey)") else
+        {
+            return Fail(error: NewsFeedServiceError.invalidUrl).eraseToAnyPublisher()
+        }
         return URLSession.shared.dataTaskPublisher(for: url)
             .mapError { $0 as Error }
             .map { $0.data }
